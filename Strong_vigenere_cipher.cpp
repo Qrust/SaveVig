@@ -16,39 +16,56 @@
 #include "hash.h"
 
 #define DEBUG
+#define VIGENERE
 
 using namespace std;
 
-int main(int argc, char const *argv[])
+int main(int argc, char **argv)
 {
 /*============================================================================
-|	Пароль
+|	Парсинг пароля
 *============================================================================*/
-	string password ("k1z2u3");
+	string password;
+	
+	int opt;
+	while ((opt = getopt(argc, argv, "p:") ) != -1) 
+	{
+		switch (opt) 
+		{
+			case 'p':
+				password = optarg;
+				break;
+			default:
+				cout << "Использовать вот так: %s -p [password]\n" << argv[0] << endl;
+				return 0;
+		}
+	}
+
 	#ifdef DEBUG
-	cout << "Пароль: " <<  password << endl
-		 << "Длина пароля: " << password.size() << endl;
+	cout << "ПАРОЛЬ: " <<  password << endl
+		 << "Длина пароля: " << password.size() << endl
+		 << endl;
 	#endif
 
 /*============================================================================
 |	Заполняем алфавит
 *============================================================================*/
 	vector<char> alphabet(126 - 32 + 1);
-
-	#ifdef DEBUG
-	cout << "Размер алфавита: " << alphabet.size() << endl;
-	#endif
 	
 	for (unsigned i = 0; i < alphabet.size(); i++)
 		alphabet[i] = (char)(i+32);
 
 	#ifdef DEBUG
-	cout << "Алфавит:" << endl;
+	cout << "АЛФАВИТ:" << endl;
+
 	for (unsigned i = 0; i < alphabet.size(); i++)
 		//cout << "[" << alphabet[i] << "] ";
 		cout << alphabet[i] << "";
 		//cout <<"["<< i <<"]"<< "[" << alphabet[i] << "]" << endl;
-	cout << endl << endl;
+
+	cout << endl
+		 << "Размер алфавита: " << alphabet.size() << endl
+		 << endl;
 	#endif
 
 /*============================================================================
@@ -74,6 +91,7 @@ int main(int argc, char const *argv[])
 	{
 		cout <<"["<< i <<"]"<< "[" << passOffset[i] << "]" << endl;
 	}
+		cout << endl;
 	#endif
 
 /*============================================================================
@@ -85,18 +103,20 @@ int main(int argc, char const *argv[])
 		for (unsigned i = 0; i < alphabet.size(); i++)
 		{
 			for (unsigned k = i; k < alphabet.size(); k++)
-				cout << alphabet[k] << " ";
+				cout << alphabet[k] << "";
 
 			for (unsigned k = 0; k < i; k++)
-				cout << alphabet[k] << " ";
+				cout << alphabet[k] << "";
 			
-			cout << endl << endl;
+			cout << endl;
+			//cout << endl << endl;
 		}
+			cout << endl;
 		#endif
 	#endif
 
 /*============================================================================
-|	Файлы для записи
+|	Файлы для чтения записи
 *============================================================================*/
 	ifstream plainText("./text.txt");
 	//ofstream encryptedText("./encrypted_text.txt");
@@ -108,7 +128,7 @@ int main(int argc, char const *argv[])
 	}
 
 /*============================================================================
-|	Пишем в буфер для  последующей обработки
+|	Пишем в буфер для последующей обработки
 *============================================================================*/
 	plainText.seekg(0, plainText.end);
 	unsigned long long int size = plainText.tellg();
@@ -122,16 +142,16 @@ int main(int argc, char const *argv[])
 	plainText.read(buffer, size);
 
 	#ifdef DEBUG
-	cout << "=====================================" << endl
+	cout << "/==========================================================" << endl
 		 << buffer << endl
-		 << "-------------------------------------" << endl << endl;
+		 << "\\----------------------------------------------------------" << endl 
+		 << endl
+		 << endl;
 	#endif
 
 /*============================================================================
 |	Частотный анализ
 *============================================================================*/
-	cout << "Статистика по файлу" << endl;
-
 	HashTable table(alphabet.size());
 	table.PutKeys(alphabet);
 	table.Analyse(size,buffer);
@@ -141,9 +161,10 @@ int main(int argc, char const *argv[])
 |	Кодируем ключем с раундами равными длине ключа
 *============================================================================*/
 	#ifdef DEBUG
-	cout << "=====================================" << endl
+	cout << "/----------------------------------------------------------" << endl
 		 << buffer << endl
-		 << "-------------------------------------" << endl << endl;
+		 << "\\----------------------------------------------------------" << endl 
+		 << endl;
 	#endif
 
 	unsigned rounds = password.size();
@@ -151,9 +172,8 @@ int main(int argc, char const *argv[])
 	for ( unsigned k = 0; k < rounds; k++)
 	{
 		#ifdef DEBUG
-		cout << "=================[" << k << "]=================" << endl
-			 << "Кодируем паролем: " << password << ", длиной " << password.size() << " символов" << endl
-			 << "-----------------[" << k << "]-----------------" << endl;
+		cout << ">>> РАУНД [" << k << "] Кодируем паролем: " << password << ", длиной " << password.size() << " символов" 
+			 << endl;
 		#endif
 
 		unsigned long long int run  = 0;
@@ -176,11 +196,13 @@ int main(int argc, char const *argv[])
 
 		password.erase(password.size()-1); // сокращаем длину пароля на 1
 
-		#ifdef DEBUG
-		cout << "=====================================" << endl
-			 << buffer << endl
-			 << "-------------------------------------" << endl << endl;
-		#endif
+	#ifdef DEBUG
+	cout << "/----------------------------------------------------------" << endl
+		 << buffer << endl
+		 << "\\----------------------------------------------------------" << endl 
+		 << endl
+		 << endl;
+	#endif
 	}
 
 	table.Flash();

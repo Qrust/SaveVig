@@ -66,17 +66,19 @@ void HashTable::PutKeys(vector<char> array)
 }
 void HashTable::PrintChains()
 {
-	cout << "========СТАТИСТИКА=ПО=ФАЙЛУ==========" << endl;
+	cout << "/=====СТАТИСТИКА=ПО=ФАЙЛУ=======\\" << endl;
 	for (unsigned i = 0; i < table.capacity(); i++)
 		table[i].PrintChain();
-	cout << "-------------------------------------" << endl;
+	cout << "\\-------------------------------/" << endl
+	<< endl;
 }
 void HashTable::PrintChainsIf()
 {
-	cout << "========СТАТИСТИКА=ПО=ФАЙЛУ==========" << endl;
+	cout << "/=====СТАТИСТИКА=ПО=ФАЙЛУ=======\\" << endl;
 	for (unsigned i = 0; i < table.capacity(); i++)
 		table[i].PrintChainIf();
-	cout << "-------------------------------------" << endl;
+	cout << "\\-------------------------------/" << endl
+	<< endl;
 }
 void HashTable::Flash()
 {
