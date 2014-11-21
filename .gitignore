@@ -1,7 +1,5 @@
 *.o
 *~
 *.sw*
-*.txt
-*-bin*
 python/*
 .directory

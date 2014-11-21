@@ -11,110 +11,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
 #include <unistd.h>
+
+#include "hash.h"
 
 #define DEBUG
 
 using namespace std;
-
-class KeyNum
-{   
-	private:
-		char key;
-		unsigned long long int num;
-
-	public:
-		KeyNum()
-		{
-			key = '\0';
-			num = 0;
-		}
-		~KeyNum()
-		{
-
-		}
-		void PutKey(char keyChar)
-		{
-			key = keyChar;
-		}       
-		void IncrNum()
-		{
-			num++;
-		}
-		void FlashNum()
-		{
-			num = 0;
-		}
-		void PrintChain()
-		{
-			cout <<"["<< key <<"]"<<"["<< num <<"]"<< endl;
-		}
-		void PrintChainIf()
-		{
-			if (num != 0)
-				cout <<"["<< key <<"]"<<"["<< num <<"]"<< endl;
-		}
-};
-
-class HashTable
-{	
-	private:
-		vector<KeyNum> table;
-	public:
-		HashTable(unsigned size)
-		{
-			table.reserve(size);
-			#ifdef DEBUG
-			cout << "size: " << size <<" capacity: " << table.capacity() << endl;
-			#endif
-		}
-		~HashTable()
-		{
-
-		}
-		void PutKeys(vector<char> array)
-		{
-			for (unsigned i = 0; i < table.capacity(); i++)
-			{
-				table[i].PutKey(array[i]);
-			}
-		}
-		void PrintChains()
-		{
-			cout << "========СТАТИСТИКА=ПО=ФАЙЛУ==========" << endl;
-			for (unsigned i = 0; i < table.capacity(); i++)
-				table[i].PrintChain();
-			cout << "-------------------------------------" << endl;
-		}
-		void PrintChainsIf()
-		{
-			cout << "========СТАТИСТИКА=ПО=ФАЙЛУ==========" << endl;
-			for (unsigned i = 0; i < table.capacity(); i++)
-				table[i].PrintChainIf();
-			cout << "-------------------------------------" << endl;
-		}
-		void Analyse(unsigned long long int size, char* buffer)
-		{
-			unsigned long long int textPosition  = 0;
-			while (textPosition < size)
-			{
-				if ( buffer[textPosition] != '\n')
-				{
-					table[(int)(buffer[textPosition]) - 32].IncrNum();
-				}
-				// дописать, отдельная обработка для '\n'
-				textPosition++;
-			}
-		}
-		void Flash()
-		{
-			for (unsigned i = 0; i < table.capacity(); i++)
-				table[i].FlashNum();
-		}
-};
-
-
 
 int main(int argc, char const *argv[])
 {
