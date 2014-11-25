@@ -20,24 +20,70 @@
 
 using namespace std;
 
-void MakePythonFile (int *planeN, int *encrN, int index)
+void MakePythonFile (HashTable *plane, HashTable *encr, string password)
 {
 	string nameFile; 
-	nameFile = "./py_tests/plotdata_" + index;
-	nameFile += ".txt";
+	nameFile = "./py_tests/plotdata_" + password;
+	nameFile += ".py";
 	ofstream pyCode(nameFile.c_str());
 	
-	if ( !plotData.is_open())
+	if ( !pyCode.is_open())
 	{
 		cout << nameFile << " не может быть открыт!\n";
-		return 0;
 	}
 
+	pyCode <<
+	"#!/usr/bin/env python" << endl <<
+	"" << endl <<
+	"import numpy as np" << endl <<
+	"import matplotlib.pyplot as plt" << endl <<
+	"" << endl <<
+	"N = 95" << endl <<
+	"" << endl <<
+	"PlainText = (";
+	
+	streambuf *coutbuf = cout.rdbuf();
+	cout.rdbuf(pyCode.rdbuf());
+	plane->PrintChainsForPython();
+	cout.rdbuf(coutbuf);
+
+	pyCode <<
+	")" << endl <<
+	"" << endl <<
+	"CryptedText = (";
+
+	coutbuf = cout.rdbuf();
+	cout.rdbuf(pyCode.rdbuf());
+	encr->PrintChainsForPython();
+	cout.rdbuf(coutbuf);
+
+	pyCode <<
+	")" << endl <<
+	"" << endl <<
+	"ind = np.arange(N)" << endl <<
+	"width = 0.35" << endl <<
+	"fig, ax = plt.subplots()" << endl <<
+	"rects1 = ax.bar(ind, PlainText, width, color='green')" << endl <<
+	"rects2 = ax.bar(ind+width, CryptedText, width, color='red')" << endl <<
+	"ax.set_title('Частотный анализ')" << endl <<
+	"ax.set_ylabel('Количество символов')" << endl <<
+	"ax.set_xlabel('Алфавит')" << endl <<
+	"ax.set_xticks(ind+width)" << endl <<
+	"ax.set_xticklabels( (' ', '!', '\"', '#', '$', '%', '&', '\\\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~') )" << endl <<
+	"ax.legend( (rects1[0], rects2[0]), ('PlainText', 'CryptedText') )" << endl <<
+	"ax.set_xlim(0,N-width/2)" << endl <<
+	"fig.set_size_inches(24,15)" << endl <<
+	"plt.savefig('Graph_" <<
+	password <<
+	".png', format = 'png', bbox_inches='tight', transparent=True)" << endl;
+
+	pyCode.close();
 }
 
 
 int main(int argc, char **argv)
 {
+
 /*============================================================================
 |	Парсинг пароля
 *============================================================================*/
@@ -79,9 +125,6 @@ int main(int argc, char **argv)
 		cout << alphabet[i] << "";
 		//cout <<"["<< i <<"]"<< "[" << alphabet[i] << "]" << endl;
 	cout << endl;
-
-	for (unsigned i = 0; i < alphabet.size(); i++)
-		cout << "'" << alphabet[i] << "', ";
 
 	cout << endl
 		 << "Размер алфавита: " << alphabet.size() << endl
@@ -170,23 +213,17 @@ int main(int argc, char **argv)
 	#endif*/
 
 /*============================================================================
-|	Запаись данных для графиков
+|	Частотный анализ planeText
 *============================================================================*/
-	streambuf *coutbuf;
-/*============================================================================
-|	Частотный анализ
-*============================================================================*/
-	HashTable table(alphabet.size());
-	table.PutKeys(alphabet);
-	table.Analyse(size,buffer);
-	table.PrintChainsIf();
+	HashTable planeTable(alphabet.size());
 
-	coutbuf = cout.rdbuf();
-	cout.rdbuf(plotData.rdbuf());
+	planeTable.Flash();
+	planeTable.PutKeys(alphabet);
+	planeTable.Analyse(size,buffer);
 
-	table.PrintChainsForPython();
-	
-	cout.rdbuf(coutbuf);
+	#ifdef DEBUG
+		planeTable.PrintChainsIf();
+	#endif
 
 /*============================================================================
 |	Кодируем ключем с раундами равными длине ключа
@@ -196,17 +233,12 @@ int main(int argc, char **argv)
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl;
-	#endif*/
-
+	#endif
+*/
 	unsigned rounds = password.size();
-	
+
 	for ( unsigned k = 0; k < rounds; k++)
 	{
-		#ifdef DEBUG
-		cout << ">>> РАУНД [" << k << "] Кодируем паролем: " << password << ", длиной " << password.size() << " символов" 
-			 << endl;
-		#endif
-
 		unsigned long long int run  = 0;
 
 		while (run < size)
@@ -233,19 +265,27 @@ int main(int argc, char **argv)
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl
 		 << endl;
-	#endif*/
-	}
+	#endif
+*/	}
 
-	table.Flash();
-	table.Analyse(size,buffer);
-	table.PrintChainsIf();
+/*============================================================================
+|	Частотный анализ encryptedText
+*============================================================================*/
+	HashTable encryptedTable(alphabet.size());
 	
-	coutbuf = cout.rdbuf();
-	cout.rdbuf(plotData.rdbuf());
+	encryptedTable.Flash();
+	encryptedTable.PutKeys(alphabet);
+	encryptedTable.Analyse(size,buffer);
 
-	table.PrintChainsForPython();
-	
-	cout.rdbuf(coutbuf);
+	#ifdef DEBUG
+		encryptedTable.PrintChainsIf();
+	#endif
+
+/*============================================================================
+|	Пишем питонский файлик для графопостроителя
+*============================================================================*/
+	string testPostfix = "lalka";
+	MakePythonFile (&planeTable, &encryptedTable, testPostfix);
 
 /*============================================================================
 |	Запись шифротекста в файл
@@ -267,5 +307,5 @@ int main(int argc, char **argv)
 
 	plainText.close();
 	delete[] buffer;
- 	return 0;
+	return 0;
 }

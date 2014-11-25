@@ -20,7 +20,6 @@ class KeyNum
 		void IncrNum();
 		void FlashNum();
 		void PrintChain();
-		void PrintChainTabled();
 		void PrintChainIf();
 		void PrintChainForPython();
 
@@ -36,7 +35,6 @@ class HashTable
 		void PutKeys(vector<char> array);
 		void PrintChains();
 		void PrintChainsIf();
-		void PrintChainsTabled();
 		void PrintChainsForPython();
 		void Analyse(unsigned long long int size, char* buffer);
 		void Flash();

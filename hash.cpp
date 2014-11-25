@@ -37,10 +37,6 @@ void KeyNum::PrintChain()
 {
 	cout <<"["<< key <<"]"<<"["<< num <<"]"<< endl;
 };
-void KeyNum::PrintChainTabled ()
-{
-	cout << key << " : " << num;
-};
 void KeyNum::PrintChainIf()
 {
 	if (num != 0)
@@ -48,7 +44,7 @@ void KeyNum::PrintChainIf()
 };
 void KeyNum::PrintChainForPython()
 {
-	cout << num << " ";
+	cout << num << ", ";
 };
 
 /*============================================================================
@@ -79,13 +75,6 @@ void HashTable::PrintChains()
 		table[i].PrintChain();
 	cout << "\\-------------------------------/" << endl
 	<< endl;
-}
-void HashTable::PrintChainsTabled()
-{
-	for (unsigned i = 0; i < table.capacity(); i++){
-		table[i].PrintChainTabled();
-		cout << endl;
-	}
 }
 void HashTable::PrintChainsIf()
 {
