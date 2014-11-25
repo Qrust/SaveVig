@@ -16,9 +16,25 @@
 #include "hash.h"
 
 #define DEBUG
-#define VIGENERE
+//#define VIGENERE
 
 using namespace std;
+
+void MakePythonFile (int *planeN, int *encrN, int index)
+{
+	string nameFile; 
+	nameFile = "./py_tests/plotdata_" + index;
+	nameFile += ".txt";
+	ofstream pyCode(nameFile.c_str());
+	
+	if ( !plotData.is_open())
+	{
+		cout << nameFile << " не может быть открыт!\n";
+		return 0;
+	}
+
+}
+
 
 int main(int argc, char **argv)
 {
@@ -62,6 +78,10 @@ int main(int argc, char **argv)
 		//cout << "[" << alphabet[i] << "] ";
 		cout << alphabet[i] << "";
 		//cout <<"["<< i <<"]"<< "[" << alphabet[i] << "]" << endl;
+	cout << endl;
+
+	for (unsigned i = 0; i < alphabet.size(); i++)
+		cout << "'" << alphabet[i] << "', ";
 
 	cout << endl
 		 << "Размер алфавита: " << alphabet.size() << endl
@@ -123,8 +143,8 @@ int main(int argc, char **argv)
 
 	if ( !plainText.is_open())
 	{
-        cout << "Файл не может быть открыт!\n";
-        return 0;
+		cout << "Файл text.txt не может быть открыт!\n";
+		return 0;
 	}
 
 /*============================================================================
@@ -141,14 +161,18 @@ int main(int argc, char **argv)
 	char* buffer = new char [size];
 	plainText.read(buffer, size);
 
-	#ifdef DEBUG
+/*	#ifdef DEBUG
 	cout << "/==========================================================" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl
 		 << endl;
-	#endif
+	#endif*/
 
+/*============================================================================
+|	Запаись данных для графиков
+*============================================================================*/
+	streambuf *coutbuf;
 /*============================================================================
 |	Частотный анализ
 *============================================================================*/
@@ -157,15 +181,22 @@ int main(int argc, char **argv)
 	table.Analyse(size,buffer);
 	table.PrintChainsIf();
 
+	coutbuf = cout.rdbuf();
+	cout.rdbuf(plotData.rdbuf());
+
+	table.PrintChainsForPython();
+	
+	cout.rdbuf(coutbuf);
+
 /*============================================================================
 |	Кодируем ключем с раундами равными длине ключа
 *============================================================================*/
-	#ifdef DEBUG
+/*	#ifdef DEBUG
 	cout << "/----------------------------------------------------------" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl;
-	#endif
+	#endif*/
 
 	unsigned rounds = password.size();
 	
@@ -196,18 +227,25 @@ int main(int argc, char **argv)
 
 		password.erase(password.size()-1); // сокращаем длину пароля на 1
 
-	#ifdef DEBUG
+/*	#ifdef DEBUG
 	cout << "/----------------------------------------------------------" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl
 		 << endl;
-	#endif
+	#endif*/
 	}
 
 	table.Flash();
 	table.Analyse(size,buffer);
 	table.PrintChainsIf();
+	
+	coutbuf = cout.rdbuf();
+	cout.rdbuf(plotData.rdbuf());
+
+	table.PrintChainsForPython();
+	
+	cout.rdbuf(coutbuf);
 
 /*============================================================================
 |	Запись шифротекста в файл

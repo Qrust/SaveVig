@@ -37,10 +37,18 @@ void KeyNum::PrintChain()
 {
 	cout <<"["<< key <<"]"<<"["<< num <<"]"<< endl;
 };
+void KeyNum::PrintChainTabled ()
+{
+	cout << key << " : " << num;
+};
 void KeyNum::PrintChainIf()
 {
 	if (num != 0)
 		cout <<"["<< key <<"]"<<"["<< num <<"]"<< endl;
+};
+void KeyNum::PrintChainForPython()
+{
+	cout << num << " ";
 };
 
 /*============================================================================
@@ -72,6 +80,13 @@ void HashTable::PrintChains()
 	cout << "\\-------------------------------/" << endl
 	<< endl;
 }
+void HashTable::PrintChainsTabled()
+{
+	for (unsigned i = 0; i < table.capacity(); i++){
+		table[i].PrintChainTabled();
+		cout << endl;
+	}
+}
 void HashTable::PrintChainsIf()
 {
 	cout << "/=====СТАТИСТИКА=ПО=ФАЙЛУ=======\\" << endl;
@@ -79,6 +94,18 @@ void HashTable::PrintChainsIf()
 		table[i].PrintChainIf();
 	cout << "\\-------------------------------/" << endl
 	<< endl;
+}
+void HashTable::PrintChainsForPython()
+{
+	//cout << "/=====СТАТИСТИКА=ПО=ФАЙЛУ=======\\" << endl;
+	for (unsigned i = 0; i < table.capacity(); i++)
+		table[i].PrintChainForPython();
+
+	//cout << endl
+	//	 << "\\-------------------------------/" << endl
+	//	 << endl;
+
+	cout << endl;
 }
 void HashTable::Flash()
 {
