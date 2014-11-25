@@ -3,4 +3,4 @@
 *.sw*
 python/*
 .directory
-*-bin
+*-bin*
