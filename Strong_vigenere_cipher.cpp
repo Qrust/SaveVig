@@ -1,5 +1,5 @@
 //=============================================================================
-// Name 			: Strong_vigenere_cipher.cpp
+// Name 		: Strong_vigenere_cipher.cpp
 // Author 		: Kurbanov
 // Version 		: 0.1
 // Copyright 	: ASIS
@@ -15,7 +15,7 @@
 
 #include "hash.h"
 
-#define DEBUG
+//#define DEBUG
 //#define VIGENERE
 
 using namespace std;
@@ -75,8 +75,8 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password)
 	"fig.set_size_inches(24,15)" << endl <<
 	"plt.savefig('Graph_" <<
 	password <<
-	".png', format = 'png', bbox_inches='tight', transparent=True)" << endl;
-
+	".png', format = 'png', bbox_inches='tight')" << endl;
+	//".png', format = 'png', bbox_inches='tight', transparent=True)" << endl;
 	pyCode.close();
 }
 
@@ -103,6 +103,8 @@ int main(int argc, char **argv)
 		}
 	}
 
+	string testPostfix = password;
+	
 	#ifdef DEBUG
 	cout << "ПАРОЛЬ: " <<  password << endl
 		 << "Длина пароля: " << password.size() << endl
@@ -284,7 +286,6 @@ int main(int argc, char **argv)
 /*============================================================================
 |	Пишем питонский файлик для графопостроителя
 *============================================================================*/
-	string testPostfix = "lalka";
 	MakePythonFile (&planeTable, &encryptedTable, testPostfix);
 
 /*============================================================================
