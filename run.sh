@@ -21,6 +21,9 @@ do
 done
 
 cd ./py_tests
+mkdir $PASSWORD
+mv *.py $PASSWORD
+cd ./$PASSWORD
 
 FILES="./*.py"
 
@@ -29,3 +32,13 @@ do
 	echo "Строим график $files"
 	python3 $files
 done
+
+mkdir	tmp
+
+x=1; for i in *png; do counter=$(printf %03d $x); ln "$i" ./tmp/img"$counter".png; x=$(($x+1)); done
+
+cd ./tmp
+
+ffmpeg -f image2 -i img%03d.png ${LEN}.mpg
+
+mv ${LEN}.mpg $BASEDIR/py_tests/
