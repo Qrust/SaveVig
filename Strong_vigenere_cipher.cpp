@@ -23,10 +23,10 @@
 using namespace std;
 
 // Делает питоновский файл в исходной директории для построения графика
-void MakePythonFile(HashTable *plane, HashTable *encr, string password, int type);
+void MakePythonFile(HashTable *plane, HashTable *encr, string password, int alphabetLen);
 
 // Простой виженер
-void Revision_0(string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size);
+void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet);
 
 // Шифрование с уменьшением длины пароля
 void Revision_1(string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size);
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 	{
 		case (26+1):
 			for (unsigned i = 0; i < alphabet.size(); i++)
-				alphabet[i] = (char)(i+97);
+				alphabet[i] = (char)(i+97);// обычные буквы нижнего регистра
 			break;		
 		case (126-32+1):
 			for (unsigned i = 0; i < alphabet.size(); i++)
@@ -112,17 +112,17 @@ int main(int argc, char **argv)
 		{
 			if (password[i] == alphabet[k])
 			{
-				passOffset[i] = (unsigned)alphabet[k] - (unsigned)alphabet[0];
+				passOffset[i] = k;
 				break;
 			}
 		}
 	}
 
 	#ifdef DEBUG
-		cout << "Сдвиг у пароля: "<< endl;
+		cout << "СДВИГ У ПАРОЛЯ: "<< endl;
 		for (unsigned i = 0; i < passOffset.size(); i++)
 		{
-			cout <<"["<< i <<"]"<< "[" << passOffset[i] << "]" << endl;
+			cout <<"["<< i <<"]"<< "[" << passOffset[i] << "]";
 		}
 		cout << endl;
 	#endif
@@ -181,10 +181,10 @@ int main(int argc, char **argv)
 /*============================================================================
 |	Частотный анализ planeText
 *============================================================================*/
-	HashTable planeTable(alphabet.size());
+	HashTable planeTable(alphabet.size()); // [символ][количество]
+	planeTable.Flash(); // очистка
+	planeTable.PutKeys(alphabet); // заполнение ключами
 
-	planeTable.Flash();
-	planeTable.PutKeys(alphabet);
 	planeTable.Analyse(size,buffer);
 
 	#ifdef DEBUG
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 |	Пишем питонский файлик для графопостроителя
 *============================================================================*/
 	// ВНИМАНИЕ, ЗНАЧЕНИЕ ПОСЛЕДНЕЙ ЦИФРЫ СМОТРИ ВНУТРИ ФУНКЦИИ
-	MakePythonFile (&planeTable, &encryptedTable, password, 2);
+	MakePythonFile (&planeTable, &encryptedTable, password, alphabet.size());
 /*============================================================================
 |	Запись шифротекста в файл
 *============================================================================*/
@@ -257,7 +257,8 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void MakePythonFile (HashTable *plane, HashTable *encr, string password, int type)
+// Требует правки при изменении алфавита
+void MakePythonFile (HashTable *plane, HashTable *encr, string password, int alphabetLen)
 {
 	string nameFile; 
 	nameFile = "./plotdata_" + password;
@@ -276,15 +277,15 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int typ
 	"import matplotlib.pyplot as plt" << endl <<
 	"" << endl;
 	
-	switch (type) 
+	switch (alphabetLen) 
 	{
-		case 1:
+		case 94:
 			pyCode << "N = 94" << endl;
 			break;
-		case 2:
+		case 95:
 			pyCode << "N = 95" << endl;
 			break;
-		case 3:
+		case 26:
 			pyCode << "N = 26" << endl;// Смотрим только буквы
 			break;
 		default:
@@ -297,15 +298,15 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int typ
 	
 	streambuf *coutbuf = cout.rdbuf();
 	cout.rdbuf(pyCode.rdbuf());
-	switch (type) 
+	switch (alphabetLen) 
 	{
-		case 1:
-			plane->PrintChainsForPythonNoSpace();
+		case 94:
+			plane->PrintChainsForPythonNoSpace(); //надо поправить
 			break;
-		case 2:
+		case 95:
 			plane->PrintChainsForPython();
 			break;
-		case 3:
+		case 26:
 			plane->PrintChainsForPython();
 			break;
 		default:
@@ -321,15 +322,15 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int typ
 
 	coutbuf = cout.rdbuf();
 	cout.rdbuf(pyCode.rdbuf());
-	switch (type) 
+	switch (alphabetLen) 
 	{
-		case 1:
+		case 94:
 			encr->PrintChainsForPythonNoSpace();
 			break;
-		case 2:
+		case 95:
 			encr->PrintChainsForPython();
 			break;
-		case 3:
+		case 26:
 			encr->PrintChainsForPython();
 			break;			
 		default:
@@ -351,15 +352,15 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int typ
 	"ax.set_xlabel('Алфавит')" << endl <<
 	"ax.set_xticks(ind+width)" << endl;
 
-	switch (type) 
+	switch (alphabetLen) 
 	{
-		case 1:
+		case 94:
 			pyCode << "ax.set_xticklabels( ('!', '\"', '#', '$', '%', '&', '\\\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~') )" << endl;
 			break;
-		case 2:
+		case 95:
 			pyCode << "ax.set_xticklabels( (' ', '!', '\"', '#', '$', '%', '&', '\\\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~') )" << endl;
 			break;
-		case 3:
+		case 26:
 			pyCode << "ax.set_xticklabels( ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z') )" << endl;
 			break;
 		default:
@@ -378,23 +379,28 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int typ
 	pyCode.close();
 }
 
-void Revision_0(string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size)
+void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet)
 {
-	unsigned long long int run  = 0;
+	size_t textPosition = 0;
 
-	while (run < size)
+	while (textPosition < size)
 	{
-		for (unsigned i = 0; i < password.size(); i++)
-		{
-			if (run >= size)
+		for (unsigned i = 0; i < passOffset.size(); i++)
+		{	
+			if (textPosition >= size)
 				break;
-
-			if ( buffer[run] != '\n')
+			// 'for' c 'if' смотрият, что за символ у нас из алфавита
+			for (unsigned k = 0; k < alphabet.size(); k++)//я тупой
 			{
-				buffer[run] = (char)(((int )buffer[run]- 32 + passOffset[i] )%95 + 32 );
+				if ( buffer[textPosition] == alphabet[k])
+				{
+
+					buffer[textPosition] = alphabet[(k+passOffset[i] )%alphabet.size()];
+					break;
+				}
 			}
-			// дописать, отдельная обработка для '\n'
-			run++;
+			
+			textPosition++;
 		}
 	}
 
