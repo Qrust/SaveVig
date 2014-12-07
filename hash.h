@@ -22,7 +22,7 @@ class KeyNum
 		void PrintChain();
 		void PrintChainIf();
 		void PrintChainForPython();
-
+		void PrintChainForPythonNoSpace();
 };
 
 class HashTable
@@ -36,8 +36,9 @@ class HashTable
 		void PrintChains();
 		void PrintChainsIf();
 		void PrintChainsForPython();
-		void Analyse(unsigned long long int size, char* buffer);
+		void PrintChainsForPythonNoSpace();
 		void Flash();
+		void Analyse(size_t size, char* buffer, vector<char> alphabet);
 };
 
 #endif

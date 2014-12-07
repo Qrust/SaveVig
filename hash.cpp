@@ -46,6 +46,11 @@ void KeyNum::PrintChainForPython()
 {
 	cout << num << ", ";
 };
+void KeyNum::PrintChainForPythonNoSpace()
+{
+	if (key != ' ')
+		cout << num << ", ";
+};
 
 /*============================================================================
 |	HashTable
@@ -53,14 +58,15 @@ void KeyNum::PrintChainForPython()
 HashTable::HashTable(unsigned size)
 {
 	table.reserve(size);
+	
 	#ifdef DEBUG
-	cout << "size: " << size <<" capacity: " << table.capacity() << endl;
+		cout << "size: " << size <<" capacity: " << table.capacity() << endl;
 	#endif
-};
+}
 HashTable::~HashTable()
 {
 
-};
+}
 void HashTable::PutKeys(vector<char> array)
 {
 	for (unsigned i = 0; i < table.capacity(); i++)
@@ -86,31 +92,37 @@ void HashTable::PrintChainsIf()
 }
 void HashTable::PrintChainsForPython()
 {
-	//cout << "/=====СТАТИСТИКА=ПО=ФАЙЛУ=======\\" << endl;
 	for (unsigned i = 0; i < table.capacity(); i++)
 		table[i].PrintChainForPython();
 
-	//cout << endl
-	//	 << "\\-------------------------------/" << endl
-	//	 << endl;
-
 	cout << endl;
+}
+void HashTable::PrintChainsForPythonNoSpace()
+{
+	for (unsigned i = 0; i < table.capacity(); i++)
+		table[i].PrintChainForPythonNoSpace();
 }
 void HashTable::Flash()
 {
 	for (unsigned i = 0; i < table.capacity(); i++)
 		table[i].FlashNum();
 }
-void HashTable::Analyse(unsigned long long int size, char* buffer)
+
+void HashTable::Analyse(size_t size, char* buffer, vector<char> alphabet)
 {
-	unsigned long long int textPosition  = 0;
+	size_t textPosition = 0;
+
 	while (textPosition < size)
 	{
-		if ( buffer[textPosition] != '\n')
+		for (unsigned i = 0; i < alphabet.size(); i++)//я тупой
 		{
-			table[(int)(buffer[textPosition]) - 32].IncrNum();
+			if ( buffer[textPosition] == alphabet[i])
+			{
+				table[i].IncrNum();
+				break;
+			}
 		}
-		// дописать, отдельная обработка для '\n'
+		
 		textPosition++;
 	}
 }
