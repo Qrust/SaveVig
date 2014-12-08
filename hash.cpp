@@ -125,4 +125,4 @@ void HashTable::Analyse(size_t size, char* buffer, vector<char> alphabet)
 		
 		textPosition++;
 	}
-}
+} 

@@ -40,5 +40,5 @@ class HashTable
 		void Flash();
 		void Analyse(size_t size, char* buffer, vector<char> alphabet);
 };
-
+ 
 #endif
