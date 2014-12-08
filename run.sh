@@ -28,7 +28,8 @@ cd ..
 echo "Начинаем генерацию тестов, при генерации нельзя запускать второй"
 
 for ticks in `seq 1 $TESTS`;do
-	PASSWORD=`cat /dev/urandom | tr -dc "a-zA-Z0-9@#*=[]" | dd  bs=$LEN count=1 2>/dev/null`
+	#PASSWORD=`cat /dev/urandom | tr -dc "a-zA-Z0-9@#*=[]" | dd  bs=$LEN count=1 2>/dev/null`
+	PASSWORD=`cat /dev/urandom | tr -dc "a-z" | dd  bs=$LEN count=1 2>/dev/null`
 	echo "Количество тестов $TESTS. Длина пароля $LEN. Тест№ $ticks"
 	./$FILE -p $PASSWORD -m $METHOD
 	mv "plotdata_${PASSWORD}.py" "./py_tests/${TESTS}_${LEN}/"
