@@ -191,6 +191,10 @@ int main(int argc, char **argv)
 		 << endl;
 	#endif*/
 /*============================================================================
+|	Моно вывод в терминал для анализа атаки Касиске
+*============================================================================*/
+	MonoPrint(buffer, size, alphabet, temp_pass);
+/*============================================================================
 |	Частотный анализ planeText
 *============================================================================*/
 	HashTable planeTable(alphabet.size()); // [символ][количество]
@@ -282,7 +286,7 @@ void MonoPrint(const char *buffer, size_t size, vector<char> alphabet, size_t of
 		if (textPosition >= size)
 			break;
 
-		for (unsigned k = 0; k <= alphabet.size(); k++)
+		for (unsigned k = 0; k < alphabet.size(); k++)
 		{
 			if (buffer[textPosition] == alphabet[k])
 			{
