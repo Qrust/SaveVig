@@ -456,9 +456,11 @@ void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<ch
 				{
 					buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
 
-					cout << "[" << alphabet[k] << "] + "<< "[" << passOffset[i] << "] = " << buffer[textPosition]
-						 << " \t [" << k << "] + "<< "[" << passOffset[i] << "] = " << (k+passOffset[i]) % alphabet.size()
-						 << endl;
+/*					#ifdef TEXT
+						cout << "[" << alphabet[k] << "] + "<< "[" << passOffset[i] << "] = " << buffer[textPosition]
+							 << " \t [" << k << "] + "<< "[" << passOffset[i] << "] = " << (k+passOffset[i]) % alphabet.size()
+							 << endl;
+					#endif*/
 
 					i++;
 					
@@ -489,7 +491,9 @@ void ReduceVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<ch
 
 		while (textPosition < size)
 		{
-			for (unsigned i = 0; i < passOffset.size(); i++)
+			unsigned i = 0;
+
+			while (i < passOffset.size())
 			{	
 				if (textPosition >= size)
 					break;
@@ -499,6 +503,9 @@ void ReduceVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<ch
 					if (buffer[textPosition] == alphabet[k])
 					{
 						buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
+
+						i++;
+
 						break;
 					}
 				}
@@ -545,7 +552,9 @@ void ReduceRecVig(char *buffer, size_t size, vector<unsigned> passOffset, vector
 
 		while (textPosition < size)
 		{
-			for (unsigned i = 0; i < passOffset.size(); i++)
+			unsigned i = 0;
+
+			while (i < passOffset.size())
 			{	
 				if (textPosition >= size)
 					break;
@@ -555,6 +564,9 @@ void ReduceRecVig(char *buffer, size_t size, vector<unsigned> passOffset, vector
 					if (buffer[textPosition] == alphabet[k])
 					{
 						buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
+
+						i++;
+
 						break;
 					}
 				}
