@@ -1,8 +1,8 @@
 *.o
 *bin
-*.txt
 *~
 *.sw*
 python/*
 .directory
 test.cpp
+a.out
