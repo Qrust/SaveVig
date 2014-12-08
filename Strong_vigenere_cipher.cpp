@@ -17,7 +17,8 @@
 
 #include "hash.h"
 
-#define DEBUG
+//#define DEBUG
+//#define TEXT
 //#define VIGENERE
 
 using namespace std;
@@ -29,13 +30,13 @@ void MakePythonFile(HashTable *plane, HashTable *encr, string password, int alph
 void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet);
 
 // Шифрование с уменьшением длины пароля
-void Revision_1(string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size);
-
-// Шифрование с уменьшением длины пароля, НО ШИФРУЮТСЯ ТОЛЬКО БУКВЫ (БЕЗ РЕГИСТРА)
-void Revision_1_1(string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size);
+void ReduceVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet);
 
 // Шифрование с уменьшением длины пароля и инвертированем
-void Revision_2(string password, vector<char> alphabet, char *buffer, unsigned long long int size);
+void ReduceRecVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet);
+
+// Вывод текста только с символами алфавита 
+void MonoPrint(const char *buffer, size_t size, vector<char> alphabet, size_t offset);
 
 int main(int argc, char **argv)
 {
@@ -62,20 +63,22 @@ int main(int argc, char **argv)
 		}
 	}
 	
+	size_t temp_pass = password.size();
+
 	#ifdef DEBUG
 		cout << "ПАРОЛЬ: " <<  password << endl
-			 << "Длина пароля: " << password.size() << endl
+			 << "ДЛИНА ПАРОЛЯ: " << password.size() << endl
 			 << endl;
 	#endif
 /*============================================================================
 |	Заполняем алфавит
 *============================================================================*/
-	int alphabet_len = (26+1);
+	int alphabet_len = (26);
 	vector<char> alphabet(alphabet_len);
 
 	switch (alphabet_len) 
 	{
-		case (26+1):
+		case (26):
 			for (unsigned i = 0; i < alphabet.size(); i++)
 				alphabet[i] = (char)(i+97);// обычные буквы нижнего регистра
 			break;		
@@ -122,7 +125,7 @@ int main(int argc, char **argv)
 		cout << "СДВИГ У ПАРОЛЯ: "<< endl;
 		for (unsigned i = 0; i < passOffset.size(); i++)
 		{
-			cout <<"["<< i <<"]"<< "[" << passOffset[i] << "]";
+			cout <<"["<< i <<"]"<< "[" << passOffset[i] << "]" << endl;
 		}
 		cout << endl;
 	#endif
@@ -150,11 +153,20 @@ int main(int argc, char **argv)
 |	Файлы для чтения записи
 *============================================================================*/
 	ifstream plainText("./text.txt");
-	//ofstream encryptedText("./encrypted_text.txt");
+
+	string encryptedTextName; 
+	encryptedTextName = "./encrypted_text_" + password;
+	encryptedTextName += ".txt";
+	ofstream encryptedText(encryptedTextName.c_str());
 
 	if ( !plainText.is_open())
 	{
 		cout << "Файл text.txt не может быть открыт!\n";
+		return 0;
+	}
+	if ( !encryptedText.is_open())
+	{
+		cout << "Файл encrypted_text.txt не может быть открыт!\n";
 		return 0;
 	}
 /*============================================================================
@@ -168,10 +180,10 @@ int main(int argc, char **argv)
 	cout << "Размер файла: " << size << " байт" <<endl;
 	#endif
 	
-	char *buffer = new char [size];
+	char *buffer = new char [size+1];
 	plainText.read(buffer, size);
 
-	/*#ifdef DEBUG
+	/*#ifdef TEXT
 	cout << "/==========================================================" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
@@ -185,49 +197,52 @@ int main(int argc, char **argv)
 	planeTable.Flash(); // очистка
 	planeTable.PutKeys(alphabet); // заполнение ключами
 
-	planeTable.Analyse(size,buffer);
+	planeTable.Analyse(size,buffer,alphabet);
 
 	#ifdef DEBUG
 		planeTable.PrintChainsIf();
 	#endif
 /*============================================================================
-|	Кодируем ключем в зависимости от медота
+|	Кодируем ключем в зависимости от метода
 *============================================================================*/
-	/*
-	#ifdef DEBUG
+	#ifdef TEXT
 	cout << "/----------------------------------------------------------" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl;
 	#endif
-	*/
+
 	switch (method) 
 	{
 		case 0:
-			Revision_0 (password, passOffset, buffer, size);
-			break;		
+			NativeVig (buffer, size, passOffset, alphabet);
+			break;
 		case 1:
-			Revision_1 (password, passOffset, buffer, size);
+			ReduceVig (buffer, size, passOffset, alphabet);
 			break;
 		case 2:
-			Revision_2 (password, alphabet, buffer, size);
-			break;			
+			ReduceRecVig (buffer, size, passOffset, alphabet);
+			break;
 		default:
-			Revision_0 (password, passOffset, buffer, size);
+			NativeVig (buffer, size, passOffset, alphabet);
 			break;
 	}
 /*============================================================================
 |	Частотный анализ encryptedText
 *============================================================================*/
-	HashTable encryptedTable(alphabet.size());
-	
+	HashTable encryptedTable(alphabet.size());	
 	encryptedTable.Flash();
 	encryptedTable.PutKeys(alphabet);
-	encryptedTable.Analyse(size,buffer);
+
+	encryptedTable.Analyse(size,buffer,alphabet);
 
 	#ifdef DEBUG
 		encryptedTable.PrintChainsIf();
 	#endif
+/*============================================================================
+|	Моно вывод в терминал для анализа атаки Касиске
+*============================================================================*/
+	MonoPrint(buffer, size, alphabet, temp_pass);
 /*============================================================================
 |	Пишем питонский файлик для графопостроителя
 *============================================================================*/
@@ -236,15 +251,8 @@ int main(int argc, char **argv)
 /*============================================================================
 |	Запись шифротекста в файл
 *============================================================================*/
-	/*	
-	plainText.seekg(0, plainText.beg);
-	while( plainText.get(c) )
-	{	
-		cout << "[" << c << "]" << "_" << plainText.tellg() << " "  ;
-		//encryptedText.put(c);
-	}
-	*/
-	//encryptedText.close();
+	//
+	encryptedText.write(buffer,size);
 /*============================================================================
 |	Очистка и выход
 *============================================================================*/
@@ -253,10 +261,53 @@ int main(int argc, char **argv)
 	#endif
 
 	plainText.close();
+	encryptedText.close();
 	delete[] buffer;
 	return 0;
 }
 
+/*============================================================================
+|	Опциональная фигня
+*============================================================================*/
+void MonoPrint(const char *buffer, size_t size, vector<char> alphabet, size_t offset)
+{
+	size_t offsetPoint = 0;
+
+	size_t textPosition = 0;
+
+	cout << "/==========================================================" << endl;
+
+	while (textPosition < size)
+	{
+		if (textPosition >= size)
+			break;
+
+		for (unsigned k = 0; k <= alphabet.size(); k++)
+		{
+			if (buffer[textPosition] == alphabet[k])
+			{
+				cout <</*"["<< textPosition <<"]"<<*/ buffer[textPosition];
+				offsetPoint++;
+			}
+		}
+		
+		textPosition++;
+
+		if (offsetPoint == offset)
+		{
+			//cout << " ";
+			offsetPoint = 0;
+		}
+	}
+
+	cout << endl
+		 << "\\----------------------------------------------------------" << endl 
+		 << endl << endl;
+}
+
+/*============================================================================
+|	Генератор файлов
+*============================================================================*/
 // Требует правки при изменении алфавита
 void MakePythonFile (HashTable *plane, HashTable *encr, string password, int alphabetLen)
 {
@@ -331,7 +382,7 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int alp
 			encr->PrintChainsForPython();
 			break;
 		case 26:
-			encr->PrintChainsForPython();
+			encr->PrintChainsForPython();//добавить сортировку
 			break;			
 		default:
 			encr->PrintChainsForPython();
@@ -379,6 +430,9 @@ void MakePythonFile (HashTable *plane, HashTable *encr, string password, int alp
 	pyCode.close();
 }
 
+/*============================================================================
+|	Методы кодировки
+*============================================================================*/
 void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet)
 {
 	size_t textPosition = 0;
@@ -392,10 +446,9 @@ void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<ch
 			// 'for' c 'if' смотрият, что за символ у нас из алфавита
 			for (unsigned k = 0; k < alphabet.size(); k++)//я тупой
 			{
-				if ( buffer[textPosition] == alphabet[k])
+				if (buffer[textPosition] == alphabet[k])
 				{
-
-					buffer[textPosition] = alphabet[(k+passOffset[i] )%alphabet.size()];
+					buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
 					break;
 				}
 			}
@@ -404,107 +457,124 @@ void NativeVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<ch
 		}
 	}
 
-	/*	
-	#ifdef DEBUG
+	#ifdef TEXT
 	cout << "/----------------------------------------------------------" << endl
 		 << buffer << endl
 		 << "\\----------------------------------------------------------" << endl 
 		 << endl
 		 << endl;
 	#endif
-	*/	
 }
 
-void Revision_1 (string password, vector<unsigned> passOffset, char *buffer, unsigned long long int size)
+void ReduceVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet)
 {
-	unsigned rounds = password.size();
+	unsigned rounds = passOffset.size();
 
-	for ( unsigned k = 0; k < rounds; k++)
+	for (unsigned r = 0; r < rounds; r++)
 	{
-		unsigned long long int run  = 0;
+		size_t textPosition = 0;
 
-		while (run < size)
+		while (textPosition < size)
 		{
-			for (unsigned i = 0; i < password.size(); i++)
-			{
-				if (run >= size)
+			for (unsigned i = 0; i < passOffset.size(); i++)
+			{	
+				if (textPosition >= size)
 					break;
-
-				if ( buffer[run] != '\n')
+				// 'for' c 'if' смотрият, что за символ у нас из алфавита
+				for (unsigned k = 0; k < alphabet.size(); k++)//я тупой
 				{
-					buffer[run] = (char)(((int )buffer[run]- 32 + passOffset[i] )%95 + 32 );
+					if (buffer[textPosition] == alphabet[k])
+					{
+						buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
+						break;
+					}
 				}
-				// дописать, отдельная обработка для '\n'
-				run++;
+				
+				textPosition++;
 			}
 		}
 
-		password.erase(password.size()-1); // сокращаем длину пароля на 1
-
-		/*	
 		#ifdef DEBUG
+			for (unsigned tt = 0; tt < passOffset.size(); tt++)
+			{
+				cout <<"["<< passOffset[tt] << "] ";
+			}
+				cout << endl;
+		#endif
+
+		#ifdef TEXT
+			cout << "/----------------------------------------------------------" << endl
+				 << buffer << endl
+				 << "\\----------------------------------------------------------" << endl 
+				 << endl
+				 << endl;
+		#endif
+
+		passOffset.erase(passOffset.end()-1);
+	}
+
+	#ifdef TEXT
 		cout << "/----------------------------------------------------------" << endl
 			 << buffer << endl
 			 << "\\----------------------------------------------------------" << endl 
 			 << endl
 			 << endl;
-		#endif
-		*/	
-	}
+	#endif
 }
 
-void Revision_2 (string password, vector<char> alphabet, char *buffer, unsigned long long int size)
+void ReduceRecVig(char *buffer, size_t size, vector<unsigned> passOffset, vector<char> alphabet)
 {
-	unsigned rounds = password.size();
+	unsigned rounds = passOffset.size();
 
-	vector<unsigned> passOffset(password.size());
-
-	for ( unsigned k = 0; k < rounds; k++)
+	for (unsigned r = 0; r < rounds; r++)
 	{
-		unsigned long long int run  = 0;
+		size_t textPosition = 0;
 
-		vector<unsigned> passOffset(password.size());
-
-		for (unsigned i = 0; i < password.size(); i++)
+		while (textPosition < size)
 		{
-			for (unsigned k = 0; k < alphabet.size(); k++)
-			{
-				if (password[i] == alphabet[k])
-				{
-					passOffset[i] = (unsigned)alphabet[k] - 32;
+			for (unsigned i = 0; i < passOffset.size(); i++)
+			{	
+				if (textPosition >= size)
 					break;
+				// 'for' c 'if' смотрият, что за символ у нас из алфавита
+				for (unsigned k = 0; k < alphabet.size(); k++)//я тупой
+				{
+					if (buffer[textPosition] == alphabet[k])
+					{
+						buffer[textPosition] = alphabet[ (k+passOffset[i]) % alphabet.size() ];
+						break;
+					}
 				}
+				
+				textPosition++;
 			}
 		}
 
-		while (run < size)
-		{
-			for (unsigned i = 0; i < password.size(); i++)
-			{
-				if (run >= size)
-					break;
-
-				if ( buffer[run] != '\n')
-				{
-					buffer[run] = (char)(((int )buffer[run]- 32 + passOffset[i] )%95 + 32 );
-				}
-				// дописать, отдельная обработка для '\n'
-				run++;
-			}
-		}
-
-		password.erase(password.size()-1); // сокращаем длину пароля на 1
-		reverse(password.begin(),password.end()); //реверс
-		//cout << password << endl;		
-
-		/*	
 		#ifdef DEBUG
-		cout << "/----------------------------------------------------------" << endl
-			 << buffer << endl
-			 << "\\----------------------------------------------------------" << endl 
-			 << endl
-			 << endl;
+			for (unsigned tt = 0; tt < passOffset.size(); tt++)
+			{
+				cout <<"["<< passOffset[tt] << "] ";
+			}
+				cout << endl;
 		#endif
-		*/	
+
+		#ifdef TEXT
+			cout << "/----------------------------------------------------------" << endl
+				 << buffer << endl
+				 << "\\----------------------------------------------------------" << endl 
+				 << endl
+				 << endl;
+		#endif
+
+		passOffset.erase(passOffset.end()-1);
+		reverse(passOffset.begin(),passOffset.end());
 	}
 }
+
+/*============================================================================
+|	Атака: Метод Касиски
+*============================================================================*/
+/*void KasiskiExam(char *buffer, size_t size,)
+{
+
+}*/
